@@ -56,7 +56,10 @@ export const ReportPDF: React.FC<ReportPDFProps> = ({ booking, onClose }) => {
       const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
       
       pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-      pdf.save(`SV_Report_${booking.id}.pdf`);
+      
+      // Update file name to Patient Name
+      const fileName = booking.patientName.replace(/[^a-z0-9]/gi, '_').toUpperCase();
+      pdf.save(`${fileName}.pdf`);
     } catch (error) {
       console.error('Error generating PDF:', error);
       alert('Failed to generate PDF. Please try the Print button instead.');
