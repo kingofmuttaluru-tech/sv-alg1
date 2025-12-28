@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Booking } from '../types';
-import { CheckCircle, Printer, Download, ShieldCheck, Microscope, ArrowLeft } from 'lucide-react';
+import { CheckCircle, Printer, Download, ShieldCheck, Microscope, ArrowLeft, QrCode } from 'lucide-react';
 
 interface ReportPDFProps {
   booking: Booking;
@@ -122,10 +122,15 @@ export const ReportPDF: React.FC<ReportPDFProps> = ({ booking, onClose }) => {
                <div className="bg-green-700 text-white px-2 py-0.5 rounded text-[8px] font-black flex items-center gap-1 mb-2">
                  <ShieldCheck className="w-2.5 h-2.5" /> VERIFIED DIGITAL REPORT
                </div>
-               <div className="p-1 border border-slate-200 rounded-lg">
-                 <img src={`https://api.qrserver.com/v1/create-qr-code/?size=55x55&data=https://sv-diagnostics.com/report/${booking.id}`} alt="QR" className="w-12 h-12" />
+               <div className="p-1 border-2 border-slate-900 rounded-lg bg-white">
+                 <img 
+                   src={`https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=https://sv-diagnostics.com/verify-report/${booking.id}`} 
+                   alt="Report Verification QR" 
+                   className="w-16 h-16" 
+                 />
                </div>
-               <p className="text-[7px] text-slate-400 mt-1 uppercase font-bold tracking-tighter">Unique Lab ID: {booking.id}</p>
+               <p className="text-[7px] text-slate-600 mt-1 uppercase font-black tracking-tighter">Scan to Verify Report</p>
+               <p className="text-[7px] text-slate-400 mt-0.5 uppercase font-bold tracking-tighter">Unique Lab ID: {booking.id}</p>
             </div>
           </div>
 
@@ -206,7 +211,7 @@ export const ReportPDF: React.FC<ReportPDFProps> = ({ booking, onClose }) => {
             </div>
           </div>
 
-          {/* Signatories - Redesigned for Indian Lab context */}
+          {/* Signatories */}
           <div className="mt-8 pt-8 border-t border-slate-200 flex justify-between items-end px-4">
             <div className="text-center w-48">
               <div className="w-full h-10 border-b border-slate-200 mb-2 flex items-center justify-center">

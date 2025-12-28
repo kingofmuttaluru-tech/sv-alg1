@@ -8,7 +8,8 @@ import {
   FlaskConical, 
   CheckCircle2, 
   FileText,
-  Truck
+  Truck,
+  ShieldCheck
 } from 'lucide-react';
 
 export const TEST_PACKAGES: TestPackage[] = [
@@ -54,10 +55,10 @@ export const STATUS_FLOW = [
   { status: BookingStatus.BOOKED, label: 'Booked', icon: <ClipboardList className="w-5 h-5" /> },
   { status: BookingStatus.COLLECTOR_ASSIGNED, label: 'Assigned', icon: <UserCheck className="w-5 h-5" /> },
   { status: BookingStatus.SAMPLE_COLLECTED, label: 'Collected', icon: <Truck className="w-5 h-5" /> },
-  { status: BookingStatus.SAMPLE_RECEIVED, label: 'At Lab', icon: <FlaskConical className="w-5 h-5" /> },
-  { status: BookingStatus.TESTING_IN_PROGRESS, label: 'Testing', icon: <Beaker className="w-5 h-5" /> },
-  { status: BookingStatus.VERIFIED, label: 'Doctor Verified', icon: <CheckCircle2 className="w-5 h-5" /> },
-  { status: BookingStatus.REPORT_DELIVERED, label: 'Delivered', icon: <FileText className="w-5 h-5" /> },
+  { status: BookingStatus.SAMPLE_RECEIVED, label: 'Received', icon: <FlaskConical className="w-5 h-5" /> },
+  { status: BookingStatus.TESTING_IN_PROGRESS, label: 'Analysis', icon: <Beaker className="w-5 h-5" /> },
+  { status: BookingStatus.VERIFIED, label: 'Incharge Review', icon: <ShieldCheck className="w-5 h-5" /> },
+  { status: BookingStatus.REPORT_DELIVERED, label: 'Report Ready', icon: <FileText className="w-5 h-5" /> },
 ];
 
 export const MOCK_BOOKINGS_INITIAL = [
@@ -65,6 +66,8 @@ export const MOCK_BOOKINGS_INITIAL = [
     id: 'BK-7721',
     patientName: 'John Doe',
     patientPhone: '+91 9876543210',
+    patientAge: '45',
+    patientSex: 'Male',
     testName: 'Lipid Profile',
     testPrice: 450,
     address: 'Flat 101, SV Towers, Ameerpet, Hyderabad',

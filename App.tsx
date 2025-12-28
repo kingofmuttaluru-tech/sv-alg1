@@ -45,7 +45,9 @@ import {
   Filter,
   Plus,
   Table as TableIcon,
-  Printer
+  Printer,
+  Lock,
+  UserCircle
 } from 'lucide-react';
 import { StatusStepper } from './components/StatusStepper';
 import { ReportPDF } from './components/ReportPDF';
@@ -60,13 +62,21 @@ export default function App() {
     (localStorage.getItem('theme') as 'light' | 'dark') || 'light'
   );
   
-  // Patient Auth State
+  // Login Type State
+  const [loginTab, setLoginTab] = useState<'PATIENT' | 'STAFF'>('PATIENT');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  // Patient Fields
   const [patientName, setPatientName] = useState('');
   const [patientAge, setPatientAge] = useState('');
   const [patientSex, setPatientSex] = useState('Male');
   const [userPhone, setUserPhone] = useState('');
   const [otpSent, setOtpSent] = useState(false);
+
+  // Staff Fields
+  const [staffUsername, setStaffUsername] = useState('');
+  const [staffPassword, setStaffPassword] = useState('');
+  const [selectedStaffRole, setSelectedStaffRole] = useState<UserRole>(UserRole.ADMIN);
 
   const [showPriceList, setShowPriceList] = useState(false);
   const [activeReport, setActiveReport] = useState<Booking | null>(null);
@@ -101,7 +111,7 @@ export default function App() {
 
   const toggleTheme = () => setTheme(prev => prev === 'light' ? 'dark' : 'light');
 
-  const handleLogin = () => {
+  const handlePatientLogin = () => {
     if (!otpSent) {
       if (!userPhone || !patientName || !patientAge) {
         alert("Please fill in all details");
@@ -111,18 +121,43 @@ export default function App() {
       return;
     }
     setIsLoggedIn(true);
+    setRole(UserRole.PATIENT);
     localStorage.setItem('sv_auth', JSON.stringify({ 
       phone: userPhone, 
       name: patientName,
       age: patientAge,
       sex: patientSex,
-      role 
+      role: UserRole.PATIENT
     }));
+  };
+
+  const handleStaffLogin = () => {
+    let success = false;
+    
+    if (selectedStaffRole === UserRole.ADMIN) {
+      if (staffUsername === 'ADMIN' && staffPassword === '1234') success = true;
+    } else {
+      // Collector, Lab Tech, Lab Incharge all use BALU/1234
+      if (staffUsername === 'BALU' && staffPassword === '1234') success = true;
+    }
+
+    if (success) {
+      setIsLoggedIn(true);
+      setRole(selectedStaffRole);
+      localStorage.setItem('sv_auth', JSON.stringify({ 
+        name: staffUsername,
+        role: selectedStaffRole 
+      }));
+    } else {
+      alert("Invalid credentials for the selected role.");
+    }
   };
 
   const handleLogout = () => {
     setIsLoggedIn(false);
     setOtpSent(false);
+    setStaffPassword('');
+    setStaffUsername('');
     localStorage.removeItem('sv_auth');
   };
 
@@ -166,109 +201,143 @@ export default function App() {
   if (!isLoggedIn) {
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-white dark:bg-slate-900 rounded-3xl shadow-2xl p-8 border border-slate-100 dark:border-slate-800">
-          <div className="flex flex-col items-center mb-8">
-            <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center mb-4 shadow-xl shadow-blue-500/20">
+        <div className="max-w-md w-full bg-white dark:bg-slate-900 rounded-3xl shadow-2xl overflow-hidden border border-slate-100 dark:border-slate-800">
+          <div className="bg-blue-600 p-8 flex flex-col items-center">
+            <div className="w-16 h-16 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center mb-4 shadow-xl">
               <Microscope className="w-10 h-10 text-white" />
             </div>
-            <h1 className="text-2xl font-black text-slate-800 dark:text-slate-100 text-center leading-tight">Sri Venkateswara Diagnostic Centre</h1>
-            <p className="text-slate-500 dark:text-slate-400 text-center mt-2">NABL Accredited Diagnostics & LIS</p>
+            <h1 className="text-2xl font-black text-white text-center leading-tight">Sri Venkateswara</h1>
+            <p className="text-blue-100 text-sm font-medium">Diagnostic Centre & LIS</p>
           </div>
 
-          <div className="space-y-4">
-            {!otpSent ? (
-              <>
-                <div>
-                  <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Patient Name</label>
-                  <div className="relative">
-                    <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
-                    <input 
-                      type="text" 
-                      value={patientName}
-                      onChange={(e) => setPatientName(e.target.value)}
-                      placeholder="Enter Full Name" 
-                      className="w-full pl-12 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl focus:ring-2 focus:ring-blue-500 dark:text-white font-medium"
-                    />
-                  </div>
-                </div>
+          <div className="p-8">
+            <div className="flex gap-2 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl mb-8">
+              <button 
+                onClick={() => setLoginTab('PATIENT')}
+                className={`flex-1 py-2 text-xs font-black uppercase tracking-widest rounded-lg transition-all ${loginTab === 'PATIENT' ? 'bg-white dark:bg-slate-700 text-blue-600 shadow-sm' : 'text-slate-400'}`}
+              >
+                Patient
+              </button>
+              <button 
+                onClick={() => setLoginTab('STAFF')}
+                className={`flex-1 py-2 text-xs font-black uppercase tracking-widest rounded-lg transition-all ${loginTab === 'STAFF' ? 'bg-white dark:bg-slate-700 text-blue-600 shadow-sm' : 'text-slate-400'}`}
+              >
+                Staff Login
+              </button>
+            </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Age</label>
-                    <input 
-                      type="number" 
-                      value={patientAge}
-                      onChange={(e) => setPatientAge(e.target.value)}
-                      placeholder="e.g. 30" 
-                      className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl focus:ring-2 focus:ring-blue-500 dark:text-white font-medium"
-                    />
+            {loginTab === 'PATIENT' ? (
+              <div className="space-y-4">
+                {!otpSent ? (
+                  <>
+                    <div className="space-y-4">
+                      <div className="relative">
+                        <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
+                        <input 
+                          type="text" 
+                          value={patientName}
+                          onChange={(e) => setPatientName(e.target.value)}
+                          placeholder="Patient Full Name" 
+                          className="w-full pl-12 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl focus:ring-2 focus:ring-blue-500 dark:text-white font-medium text-sm"
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <input 
+                          type="number" 
+                          value={patientAge}
+                          onChange={(e) => setPatientAge(e.target.value)}
+                          placeholder="Age" 
+                          className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl focus:ring-2 focus:ring-blue-500 dark:text-white font-medium text-sm"
+                        />
+                        <select 
+                          value={patientSex}
+                          onChange={(e) => setPatientSex(e.target.value)}
+                          className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl focus:ring-2 focus:ring-blue-500 dark:text-white font-medium text-sm appearance-none"
+                        >
+                          <option value="Male">Male</option>
+                          <option value="Female">Female</option>
+                        </select>
+                      </div>
+                      <div className="relative">
+                        <Smartphone className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
+                        <input 
+                          type="tel" 
+                          value={userPhone}
+                          onChange={(e) => setUserPhone(e.target.value)}
+                          placeholder="Mobile Number" 
+                          className="w-full pl-12 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl focus:ring-2 focus:ring-blue-500 dark:text-white font-medium text-sm"
+                        />
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <div className="animate-in slide-in-from-top duration-300">
+                    <p className="text-xs font-bold text-center text-slate-500 mb-4 uppercase">Enter OTP sent to {userPhone}</p>
+                    <div className="flex gap-2 mb-6">
+                      {[1, 2, 3, 4].map(i => (
+                        <input 
+                          key={i}
+                          type="text" 
+                          maxLength={1}
+                          className="w-full h-12 bg-slate-50 dark:bg-slate-800 border-none rounded-xl text-center text-xl font-bold dark:text-white"
+                          defaultValue={i}
+                        />
+                      ))}
+                    </div>
                   </div>
-                  <div>
-                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Sex</label>
+                )}
+                <button 
+                  onClick={handlePatientLogin}
+                  className="w-full bg-blue-600 text-white py-4 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20 active:scale-95"
+                >
+                  {otpSent ? 'Enter Dashboard' : 'Get Verification Code'}
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="space-y-4">
+                  <div className="relative">
+                    <UserCircle className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
                     <select 
-                      value={patientSex}
-                      onChange={(e) => setPatientSex(e.target.value)}
-                      className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl focus:ring-2 focus:ring-blue-500 dark:text-white font-medium appearance-none"
+                      value={selectedStaffRole}
+                      onChange={(e) => setSelectedStaffRole(e.target.value as UserRole)}
+                      className="w-full pl-12 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl focus:ring-2 focus:ring-blue-500 dark:text-white font-bold text-xs uppercase tracking-wider appearance-none"
                     >
-                      <option value="Male">Male</option>
-                      <option value="Female">Female</option>
-                      <option value="Other">Other</option>
+                      <option value={UserRole.ADMIN}>Admin Panel</option>
+                      <option value={UserRole.COLLECTOR}>Collection Boy</option>
+                      <option value={UserRole.LAB_TECH}>Lab Technician</option>
+                      <option value={UserRole.LAB_INCHARGE}>Lab Incharge</option>
                     </select>
                   </div>
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Mobile Number</label>
                   <div className="relative">
-                    <Smartphone className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
+                    <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
                     <input 
-                      type="tel" 
-                      value={userPhone}
-                      onChange={(e) => setUserPhone(e.target.value)}
-                      placeholder="98765 43210" 
-                      className="w-full pl-12 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl focus:ring-2 focus:ring-blue-500 dark:text-white font-medium"
+                      type="text" 
+                      value={staffUsername}
+                      onChange={(e) => setStaffUsername(e.target.value)}
+                      placeholder="Username" 
+                      className="w-full pl-12 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl focus:ring-2 focus:ring-blue-500 dark:text-white font-medium text-sm"
+                    />
+                  </div>
+                  <div className="relative">
+                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
+                    <input 
+                      type="password" 
+                      value={staffPassword}
+                      onChange={(e) => setStaffPassword(e.target.value)}
+                      placeholder="Password" 
+                      className="w-full pl-12 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl focus:ring-2 focus:ring-blue-500 dark:text-white font-medium text-sm"
                     />
                   </div>
                 </div>
-              </>
-            ) : (
-              <div className="animate-in slide-in-from-top duration-300">
-                <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Verification OTP</label>
-                <div className="flex gap-2">
-                  {[1, 2, 3, 4].map(i => (
-                    <input 
-                      key={i}
-                      type="text" 
-                      maxLength={1}
-                      className="w-full h-14 bg-slate-50 dark:bg-slate-800 border-none rounded-xl text-center text-xl font-bold dark:text-white"
-                      defaultValue={i}
-                    />
-                  ))}
-                </div>
+                <button 
+                  onClick={handleStaffLogin}
+                  className="w-full bg-slate-900 dark:bg-blue-600 text-white py-4 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-slate-800 transition-all shadow-lg active:scale-95"
+                >
+                  Authorized Sign In
+                </button>
               </div>
             )}
-
-            <button 
-              onClick={handleLogin}
-              className="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold text-lg hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20 active:scale-95"
-            >
-              {otpSent ? 'Login' : 'Get OTP'}
-            </button>
-            
-            <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
-               <p className="text-xs font-bold text-slate-400 uppercase text-center mb-4">Demo Staff Roles Selection</p>
-               <div className="grid grid-cols-2 gap-2">
-                 {[UserRole.ADMIN, UserRole.COLLECTOR, UserRole.LAB_TECH, UserRole.DOCTOR].map(r => (
-                   <button 
-                     key={r}
-                     onClick={() => setRole(r)}
-                     className={`text-[10px] font-bold py-2 rounded-lg border uppercase tracking-wider ${role === r ? 'bg-slate-800 text-white border-slate-800' : 'bg-transparent border-slate-200 text-slate-500'}`}
-                   >
-                     {r.replace('_', ' ')}
-                   </button>
-                 ))}
-               </div>
-            </div>
           </div>
         </div>
       </div>
@@ -309,8 +378,8 @@ export default function App() {
       <main className="flex-1 p-4 md:p-8 overflow-y-auto print:p-0">
         <header className="flex justify-between items-center mb-8 print:hidden">
           <div>
-            <h2 className="text-2xl font-black text-slate-800 dark:text-slate-100 uppercase">{showPriceList ? 'MASTER CATALOG' : `${role} PORTAL`}</h2>
-            <p className="text-slate-500 dark:text-slate-400 text-sm">Welcome, {patientName || role}</p>
+            <h2 className="text-2xl font-black text-slate-800 dark:text-slate-100 uppercase">{showPriceList ? 'MASTER CATALOG' : `${role.replace('_', ' ')} PORTAL`}</h2>
+            <p className="text-slate-500 dark:text-slate-400 text-sm">Welcome, {patientName || role.replace('_', ' ')}</p>
           </div>
           <div className="flex gap-4 items-center">
              <button className="p-2 bg-white dark:bg-slate-900 rounded-full border border-slate-200 dark:border-slate-800 shadow-sm relative">
@@ -331,7 +400,7 @@ export default function App() {
             {role === UserRole.ADMIN && <AdminView bookings={bookings} updateStatus={updateBookingStatus} onShowCatalog={() => setShowPriceList(true)} />}
             {role === UserRole.COLLECTOR && <CollectorView bookings={bookings} updateStatus={updateBookingStatus} />}
             {role === UserRole.LAB_TECH && <LabTechView bookings={bookings} updateStatus={updateBookingStatus} />}
-            {role === UserRole.DOCTOR && <DoctorView bookings={bookings} updateStatus={updateBookingStatus} onFinalize={setActiveReport} />}
+            {role === UserRole.LAB_INCHARGE && <LabInchargeView bookings={bookings} updateStatus={updateBookingStatus} onFinalize={setActiveReport} />}
           </>
         )}
       </main>
@@ -506,7 +575,7 @@ const AdminView = ({ bookings, updateStatus, onShowCatalog }: { bookings: Bookin
                   </td>
                   <td className="px-6 py-4 text-right">
                     {b.status === BookingStatus.BOOKED && (
-                      <button onClick={() => updateStatus(b.id, BookingStatus.COLLECTOR_ASSIGNED, { collectorName: 'Rahul Kumar' })} className="text-blue-600 font-bold hover:underline">Assign Boy</button>
+                      <button onClick={() => updateStatus(b.id, BookingStatus.COLLECTOR_ASSIGNED, { collectorName: 'BALU' })} className="text-blue-600 font-bold hover:underline">Assign Collector</button>
                     )}
                   </td>
                 </tr>
@@ -567,7 +636,6 @@ const LabTechView = ({ bookings, updateStatus }: { bookings: Booking[], updateSt
     setIsProcessing(true);
     const results: LabResult[] = Object.entries(resData).map(([p, v]) => {
       const rangeInfo = NORMAL_RANGES[p] || { range: 'Variable', unit: 'U/L' };
-      // Simple abnormality logic for demo
       const isAbnormal = v > 200 || (v < 60 && v > 0); 
       return {
         parameter: p,
@@ -578,7 +646,6 @@ const LabTechView = ({ bookings, updateStatus }: { bookings: Booking[], updateSt
       };
     });
 
-    // Automatically call analyzeLabResults to generate a doctor's comment
     const comment = await analyzeLabResults(results, b.testName);
     
     updateStatus(b.id, BookingStatus.VERIFIED, { results, doctorComment: comment });
@@ -600,12 +667,12 @@ const LabTechView = ({ bookings, updateStatus }: { bookings: Booking[], updateSt
                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{b.barcode}</p>
                 </div>
               </div>
-              <span className="text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">{b.status}</span>
+              <span className="text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full uppercase">{b.status.replace('_', ' ')}</span>
            </div>
 
            {editing === b.id ? (
              <div className="bg-slate-50 dark:bg-slate-800 p-6 rounded-xl animate-in slide-in-from-bottom duration-300">
-                <h5 className="font-bold text-sm mb-4 dark:text-white">Enter Result Values</h5>
+                <h5 className="font-bold text-sm mb-4 dark:text-white">Enter Result Values (Technician: S BALARAJU)</h5>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                    {Object.keys(resData).map(p => (
                      <div key={p}>
@@ -620,38 +687,37 @@ const LabTechView = ({ bookings, updateStatus }: { bookings: Booking[], updateSt
                    ))}
                 </div>
                 <div className="flex gap-2">
-                   <button onClick={() => setEditing(null)} className="flex-1 py-2 bg-slate-200 dark:bg-slate-700 rounded-lg font-bold text-xs">Cancel</button>
+                   <button onClick={() => setEditing(null)} className="flex-1 py-2 bg-slate-200 dark:bg-slate-700 rounded-lg font-bold text-xs uppercase">Cancel</button>
                    <button 
                     onClick={() => saveResults(b)} 
                     disabled={isProcessing}
-                    className="flex-1 py-2 bg-blue-600 text-white rounded-lg font-bold text-xs flex items-center justify-center gap-2"
+                    className="flex-1 py-2 bg-blue-600 text-white rounded-lg font-bold text-xs uppercase flex items-center justify-center gap-2"
                    >
                      {isProcessing ? <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : null}
-                     {isProcessing ? 'Saving & AI Analyzing...' : 'Finalize Results'}
+                     {isProcessing ? 'Processing...' : 'Verify & Send to Incharge'}
                    </button>
                 </div>
              </div>
            ) : (
              <div className="flex gap-2">
-                {b.status === BookingStatus.SAMPLE_COLLECTED && <button onClick={() => updateStatus(b.id, BookingStatus.SAMPLE_RECEIVED)} className="flex-1 py-3 bg-blue-600 text-white rounded-xl font-bold text-xs">Receive Sample</button>}
-                {b.status === BookingStatus.SAMPLE_RECEIVED && <button onClick={() => updateStatus(b.id, BookingStatus.TESTING_IN_PROGRESS)} className="flex-1 py-3 bg-slate-900 dark:bg-white dark:text-slate-900 text-white rounded-xl font-bold text-xs">Start Analysis</button>}
-                {b.status === BookingStatus.TESTING_IN_PROGRESS && <button onClick={() => startEntry(b)} className="flex-1 py-3 bg-green-600 text-white rounded-xl font-bold text-xs">Enter Results</button>}
+                {b.status === BookingStatus.SAMPLE_COLLECTED && <button onClick={() => updateStatus(b.id, BookingStatus.SAMPLE_RECEIVED)} className="flex-1 py-3 bg-blue-600 text-white rounded-xl font-black text-xs uppercase tracking-widest">Receive Sample</button>}
+                {b.status === BookingStatus.SAMPLE_RECEIVED && <button onClick={() => updateStatus(b.id, BookingStatus.TESTING_IN_PROGRESS)} className="flex-1 py-3 bg-slate-900 dark:bg-white dark:text-slate-900 text-white rounded-xl font-black text-xs uppercase tracking-widest">Start Analysis</button>}
+                {b.status === BookingStatus.TESTING_IN_PROGRESS && <button onClick={() => startEntry(b)} className="flex-1 py-3 bg-green-600 text-white rounded-xl font-black text-xs uppercase tracking-widest">Enter Parameters</button>}
              </div>
            )}
         </div>
       ))}
-      {atLab.length === 0 && <p className="text-center py-20 text-slate-400">Lab queue is clear.</p>}
+      {atLab.length === 0 && <p className="text-center py-20 text-slate-400">Lab analysis queue is currently empty.</p>}
     </div>
   );
 };
 
-const DoctorView = ({ bookings, updateStatus, onFinalize }: { bookings: Booking[], updateStatus: (id: string, s: BookingStatus, e?: any) => void, onFinalize: (b: Booking) => void }) => {
+const LabInchargeView = ({ bookings, updateStatus, onFinalize }: { bookings: Booking[], updateStatus: (id: string, s: BookingStatus, e?: any) => void, onFinalize: (b: Booking) => void }) => {
   const [analyzing, setAnalyzing] = useState<string | null>(null);
   const pending = bookings.filter(b => b.status === BookingStatus.VERIFIED);
 
   const approve = async (b: Booking) => {
     setAnalyzing(b.id);
-    // Comment might already exist from LabTech, but we can re-verify or regenerate if needed
     const interpretation = b.doctorComment || await analyzeLabResults(b.results || [], b.testName);
     setAnalyzing(null);
     const updatedBooking = { ...b, status: BookingStatus.REPORT_DELIVERED, doctorComment: interpretation };
@@ -672,10 +738,10 @@ const DoctorView = ({ bookings, updateStatus, onFinalize }: { bookings: Booking[
               <button 
                 onClick={() => approve(b)} 
                 disabled={analyzing === b.id}
-                className="bg-blue-600 text-white px-8 py-4 rounded-2xl font-bold flex items-center gap-2 hover:bg-blue-700 disabled:opacity-50 transition-all shadow-xl shadow-blue-500/20"
+                className="bg-blue-600 text-white px-8 py-4 rounded-2xl font-black text-sm uppercase tracking-widest flex items-center gap-2 hover:bg-blue-700 disabled:opacity-50 transition-all shadow-xl shadow-blue-500/20"
               >
                 {analyzing === b.id ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <CheckCircle2 className="w-5 h-5" />}
-                Sign & Release Report
+                Authorize Report
               </button>
            </div>
 
@@ -692,7 +758,7 @@ const DoctorView = ({ bookings, updateStatus, onFinalize }: { bookings: Booking[
            </div>
         </div>
       ))}
-      {pending.length === 0 && <p className="text-center py-20 text-slate-400">No reports awaiting medical review.</p>}
+      {pending.length === 0 && <p className="text-center py-20 text-slate-400">No reports awaiting Lab Incharge authorization.</p>}
     </div>
   );
 };

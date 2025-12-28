@@ -4,7 +4,7 @@ export enum UserRole {
   ADMIN = 'ADMIN',
   COLLECTOR = 'COLLECTOR',
   LAB_TECH = 'LAB_TECH',
-  DOCTOR = 'DOCTOR'
+  LAB_INCHARGE = 'LAB_INCHARGE'
 }
 
 export enum BookingStatus {
