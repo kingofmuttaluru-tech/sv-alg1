@@ -32,6 +32,8 @@ export interface Booking {
   id: string;
   patientName: string;
   patientPhone: string;
+  patientAge?: string;
+  patientSex?: string;
   testName: string;
   testPrice: number;
   address: string;

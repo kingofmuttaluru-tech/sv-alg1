@@ -141,7 +141,7 @@ export const ReportPDF: React.FC<ReportPDFProps> = ({ booking, onClose }) => {
             </div>
             <div className="flex justify-between items-center border-b border-slate-200 pb-0.5">
               <span className="text-[8px] font-black text-slate-400 uppercase tracking-wider">Age / Sex</span>
-              <span className="text-xs font-bold text-slate-900">32 Y / Female</span>
+              <span className="text-xs font-bold text-slate-900">{booking.patientAge || 'N/A'} Y / {booking.patientSex || 'N/A'}</span>
             </div>
             <div className="flex justify-between items-center border-b border-slate-200 pb-0.5">
               <span className="text-[8px] font-black text-slate-400 uppercase tracking-wider">Ref. Doctor</span>
@@ -210,10 +210,10 @@ export const ReportPDF: React.FC<ReportPDFProps> = ({ booking, onClose }) => {
           <div className="mt-8 pt-8 border-t border-slate-200 flex justify-between items-end px-4">
             <div className="text-center w-48">
               <div className="w-full h-10 border-b border-slate-200 mb-2 flex items-center justify-center">
-                <span className="text-[8px] text-slate-300 italic uppercase">Digitally Signed By Manager</span>
+                <span className="text-[8px] text-slate-300 italic uppercase">Processed By</span>
               </div>
-              <p className="text-[11px] font-black text-slate-900 uppercase">Arun Kumar J.</p>
-              <p className="text-[8px] text-slate-500 font-bold uppercase tracking-tighter">Chief Lab Technologist</p>
+              <p className="text-[11px] font-black text-slate-900 uppercase">S BALARAJU</p>
+              <p className="text-[8px] text-slate-500 font-bold uppercase tracking-tighter">LAB TECHNICIAN</p>
             </div>
             
             <div className="text-center w-56">
@@ -221,9 +221,9 @@ export const ReportPDF: React.FC<ReportPDFProps> = ({ booking, onClose }) => {
                   <img src="https://api.dicebear.com/7.x/initials/svg?seed=SV&backgroundColor=transparent&fontSize=45" alt="Sig" className="h-full opacity-10 grayscale" />
                </div>
                <div className="border-t border-slate-300 pt-1">
-                 <p className="text-[11px] font-black text-slate-900 uppercase">Dr. Sarah Venkateswara</p>
+                 <p className="text-[11px] font-black text-slate-900 uppercase">K SRI HARI</p>
                  <p className="text-[8px] text-slate-500 font-bold uppercase tracking-wider leading-none">
-                   MD Pathologist • Reg No: 54221
+                   LAB INCHARGE
                  </p>
                  <p className="text-[7px] text-slate-400 font-bold mt-0.5 uppercase">NABL Authorized Signatory</p>
                </div>
