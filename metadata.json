@@ -1,0 +1,8 @@
+{
+  "name": " Sri Venkateswara Diagnostic Centre",
+  "description": "End-to-end NABL accredited diagnostic workflow with real-time tracking, AI interpretation, and role-based access control.",
+  "requestFramePermissions": [
+    "geolocation",
+    "camera"
+  ]
+}
