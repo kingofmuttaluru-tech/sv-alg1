@@ -1,7 +1,9 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Booking } from '../types';
-import { CheckCircle, Printer, Download, ShieldCheck, Microscope, ArrowLeft, QrCode } from 'lucide-react';
+import { CheckCircle, Printer, Download, ShieldCheck, Microscope, ArrowLeft, QrCode, Loader2 } from 'lucide-react';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 interface ReportPDFProps {
   booking: Booking;
@@ -9,6 +11,8 @@ interface ReportPDFProps {
 }
 
 export const ReportPDF: React.FC<ReportPDFProps> = ({ booking, onClose }) => {
+  const [isGenerating, setIsGenerating] = useState(false);
+
   const reportingDate = new Date().toLocaleDateString('en-IN', {
     day: '2-digit',
     month: '2-digit',
@@ -25,42 +29,40 @@ export const ReportPDF: React.FC<ReportPDFProps> = ({ booking, onClose }) => {
     minute: '2-digit'
   });
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     const reportElement = document.getElementById('printable-report');
     if (!reportElement) return;
 
-    const htmlContent = `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Medical_Report_${booking.id}</title>
-          <script src="https://cdn.tailwindcss.com"></script>
-          <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
-          <style>
-            @media print {
-              body { margin: 0; padding: 0; }
-              .no-print { display: none; }
-              @page { size: A4; margin: 10mm; }
-            }
-            body { font-family: 'Inter', sans-serif; }
-          </style>
-        </head>
-        <body>
-          <div class="p-4">${reportElement.innerHTML}</div>
-          <script>window.onload = () => { window.print(); }</script>
-        </body>
-      </html>
-    `;
+    setIsGenerating(true);
+    try {
+      // Create canvas from the report element
+      const canvas = await html2canvas(reportElement, {
+        scale: 2, // Higher scale for better PDF quality
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff',
+        windowWidth: 794, // A4 width in px at 96 DPI
+      });
 
-    const blob = new Blob([htmlContent], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `SV_Report_${booking.id}.html`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      });
+
+      const imgProps = pdf.getImageProperties(imgData);
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+      
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      pdf.save(`SV_Report_${booking.id}.pdf`);
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('Failed to generate PDF. Please try the Print button instead.');
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   return (
@@ -81,10 +83,11 @@ export const ReportPDF: React.FC<ReportPDFProps> = ({ booking, onClose }) => {
         <div className="flex gap-3">
           <button 
             onClick={handleDownload}
-            className="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-4 py-2 rounded-xl font-bold text-xs hover:bg-slate-200 transition-all"
+            disabled={isGenerating}
+            className="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-4 py-2 rounded-xl font-bold text-xs hover:bg-slate-200 transition-all disabled:opacity-50"
           >
-            <Download className="w-4 h-4" />
-            Download
+            {isGenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+            {isGenerating ? 'Generating...' : 'Download PDF'}
           </button>
           <button 
             onClick={() => window.print()}
